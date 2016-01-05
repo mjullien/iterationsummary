@@ -314,11 +314,13 @@
             var acceptanceData = {
                 totalPlanEstimate: 0,
                 totalAcceptedPoints: 0,
+				totalCompletedPoints: 0,
                 totalItems: 0,
 				totalUS: 0,
 				totalDefects: 0,
 				totalTestSets:0,
                 totalAcceptedItems: 0,
+				totalCompletedItems: 0,
                 acceptedLate: false,
                 workNotEstimated: 0};
 
@@ -331,9 +333,11 @@
 				} else {
 					acceptanceData.totalUS++;
 				}
-				console.log(item.get('_type'));
+
                 if (item.get('PlanEstimate')) {
                     acceptanceData.totalPlanEstimate += item.get('PlanEstimate');
+                }else if (!item.get('PlanEstimate')) {
+                    acceptanceData.workNotEstimated++;
                 }
                 if (item.get('ScheduleState') === "Accepted" ||
                         (postAcceptedState !== null && item.get('ScheduleState') === postAcceptedState)) {
@@ -343,8 +347,9 @@
                     if (item.get('AcceptedDate') && item.get('AcceptedDate') > this.getEndDate()) {
                         acceptanceData.acceptedLate = true;
                     }
-                } else if (!item.get('PlanEstimate')) {
-                    acceptanceData.workNotEstimated++;
+                } else if (item.get('ScheduleState') === "Completed") {
+                    acceptanceData.totalCompletedPoints += item.get('PlanEstimate');
+                    acceptanceData.totalCompletedItems++;
                 }
             }, this);
 
@@ -356,11 +361,13 @@
                 success: function(postAcceptedState) {
                     var totalPlanEstimate = 0;
                     var totalAcceptedPoints = 0;
+					var totalCompletedPoints = 0;
                     var totalItems = 0;
 					var totalUS = 0;
 					var totalDefects= 0;
 					var totalTestSets=0;
                     var totalAcceptedItems = 0;
+					var totalCompletedItems = 0;
                     var acceptedLate = false;
                     var workNotEstimated = 0;
 
@@ -368,11 +375,13 @@
                         var itemAcceptanceData = this._aggregateAcceptance(item, postAcceptedState);
                         totalPlanEstimate += itemAcceptanceData.totalPlanEstimate;
                         totalAcceptedPoints += itemAcceptanceData.totalAcceptedPoints;
+						totalCompletedPoints += itemAcceptanceData.totalCompletedPoints;
                         totalItems += itemAcceptanceData.totalItems;
 						totalUS += itemAcceptanceData.totalUS;
 						totalDefects += itemAcceptanceData.totalDefects;
 						totalTestSets += itemAcceptanceData.totalTestSets;
                         totalAcceptedItems += itemAcceptanceData.totalAcceptedItems;
+						totalCompletedItems += itemAcceptanceData.totalCompletedItems;
                         if (!acceptedLate) {
                             acceptedLate = itemAcceptanceData.acceptedLate;
                         }
@@ -438,9 +447,12 @@
 					var list = {
 						tous : totalUS,
 						tode : totalDefects,
+						tots : totalTestSets,
 						acus : totalAcceptedItems,
+						cous : totalCompletedItems,
 						tosp : totalPlanEstimate,
 						acsp : totalAcceptedPoints,
+						cosp : totalCompletedPoints,
 						plvc : this.getIteration().get("PlannedVelocity")
 					};
 					config.list = [];
@@ -519,7 +531,6 @@
         },
 
         _getDefectsConfigObject: function() {
-			console.log(this._getActiveDefectCount(this.results.userstory));
             var totalDefectCount = this._getActiveDefectCount(this.results.userstory)[0];
 
             if (this.results.defectsuite) {
@@ -659,7 +670,13 @@
 							text: 'NB defects', dataIndex: 'tode'
 							},
 							{
+							text: 'NB Test Sets', dataIndex: 'tots'
+							},
+							{
 							text: 'NB US/DE Acceptés', dataIndex: 'acus'
+							},
+							{
+							text: 'NB US/DE Completed', dataIndex: 'cous'
 							},
 							{
 							text: 'Nb points planifiés', dataIndex: 'tosp'
@@ -669,6 +686,9 @@
 							},
 							{
 							text: 'Nb points acceptés', dataIndex: 'acsp'
+							},
+							{
+							text: 'Nb points completed', dataIndex: 'cosp'
 							}
 						]
 					});
