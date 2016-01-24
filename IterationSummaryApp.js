@@ -515,7 +515,6 @@
         },
 
         _getActiveDefectCount: function(items) {
-			var nbDefects = 0;
             var activeDefectsCount = 0;
             items = items || [];
             Ext.Array.forEach(items, function(item) {
@@ -524,23 +523,22 @@
                     if (state !== 'Closed') {
                         activeDefectsCount += count;
                     }
-					nbDefects++;
                 });
             });
-            return [nbDefects, activeDefectsCount];
+            return activeDefectsCount;
         },
 
         _getDefectsConfigObject: function() {
-            var totalDefectCount = this._getActiveDefectCount(this.results.userstory)[0];
+            var totalDefectCount = this._getActiveDefectCount(this.results.userstory);
 
             if (this.results.defectsuite) {
-                totalDefectCount += this._getActiveDefectCount(this.results.defectsuite)[0];
+                totalDefectCount += this._getActiveDefectCount(this.results.defectsuite);
             }
 
             var config = { rowType: 'defects'};
 
             if (totalDefectCount > 0 && this.timeBoxInfo.timeOrientation !== "future") {
-                config.title = totalDefectCount + " Defect associé" + (totalDefectCount !== 1 ? "s" : "");
+                config.title = totalDefectCount + " Defect associé ouvert" + (totalDefectCount !== 1 ? "s" : "");
                 config.subtitle = "";
 
                 if (this.timeBoxInfo.timeOrientation === "past") {
